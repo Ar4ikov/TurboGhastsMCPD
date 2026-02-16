@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "turboghasts-mcpd",
+  "version": "${version}",
+  "name": "TurboGhasts & MCPD",
+  "description": "Server-side Fabric mod that turns Happy Ghasts into registered vehicles with license plates, impound lot, speed stages, particle trails, and a full traffic police (MCPD) system.",
+  "authors": [
+    "Nikita Davidchuk (Ar4ikov)"
+  ],
+  "contact": {
+    "sources": "https://github.com/Ar4ikov/turboghasts-mcpd",
+    "email": "bizy18588@gmail.com"
+  },
+  "license": "MIT",
+  "icon": "assets/turboghasts-mcpd/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "server": ["com.happyghast.gai.HappyGhastGaiMod"]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

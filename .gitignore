@@ -1,0 +1,55 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.cursor/
+*.code-workspace
+.settings/
+.classpath
+.project
+.factorypath
+out/
+bin/
+
+# Fabric Loom
+remappedSrc/
+run/
+
+# Local Maven repo (bundled dependency)
+# Uncomment if you want to track the local-repo in git:
+# !local-repo/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Java
+*.class
+*.jar
+!libs/*.jar
+!gradle/wrapper/gradle-wrapper.jar
+hs_err_pid*
+replay_pid*
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+world/
+server.properties
+ops.json
+banned-ips.json
+banned-players.json
+whitelist.json
+eula.txt
+usercache.json
