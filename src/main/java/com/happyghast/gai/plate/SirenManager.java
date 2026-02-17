@@ -17,9 +17,9 @@ import java.util.UUID;
 
 public class SirenManager {
 
-    private static final double SIREN_Y_OFFSET = 3.0;
+    private static final double SIREN_Y_OFFSET = 7.0;
     private static final float SIREN_SCALE = 1.8f;
-    private static final double BLOCK_SPACING = 0.9;
+    private static final double SIDE_OFFSET = 1.0;
 
     private static final String GAI_PLATE_TEXT = "\u0413322\u0410\u0418 67";
 
@@ -32,8 +32,8 @@ public class SirenManager {
 
         Vec3d basePos = getSirenBasePos(ghast);
 
-        UUID redUuid = spawnBlockDisplay(world, ghast, basePos, -BLOCK_SPACING / 2, true);
-        UUID blueUuid = spawnBlockDisplay(world, ghast, basePos, BLOCK_SPACING / 2, false);
+        UUID blueUuid = spawnBlockDisplay(world, ghast, basePos, -SIDE_OFFSET, false);
+        UUID redUuid = spawnBlockDisplay(world, ghast, basePos, SIDE_OFFSET, true);
 
         data.setSirenRedUuid(redUuid);
         data.setSirenBlueUuid(blueUuid);
@@ -58,8 +58,8 @@ public class SirenManager {
     public static void updateSirenPositions(ServerWorld world, Entity ghast, GhastVehicleData data) {
         Vec3d basePos = getSirenBasePos(ghast);
 
-        updateBlockDisplay(world, ghast, data.getSirenRedUuid(), basePos, -BLOCK_SPACING / 2);
-        updateBlockDisplay(world, ghast, data.getSirenBlueUuid(), basePos, BLOCK_SPACING / 2);
+        updateBlockDisplay(world, ghast, data.getSirenBlueUuid(), basePos, -SIDE_OFFSET);
+        updateBlockDisplay(world, ghast, data.getSirenRedUuid(), basePos, SIDE_OFFSET);
     }
 
     private static final int COLOR_RED = 0xFF0000;
@@ -67,11 +67,16 @@ public class SirenManager {
 
     public static void spawnSirenParticles(ServerWorld world, Entity ghast, GhastVehicleData data, boolean bluePhase) {
         Vec3d basePos = getSirenBasePos(ghast);
+        float yawRad = (float) Math.toRadians(ghast.getYaw());
+        double rightX = Math.cos(yawRad);
+        double rightZ = Math.sin(yawRad);
 
         if (bluePhase) {
-            spawnCubeParticles(world, basePos.add(BLOCK_SPACING / 2, 0, 0), COLOR_BLUE);
+            Vec3d blueCenter = basePos.add(-rightX * SIDE_OFFSET, 0, -rightZ * SIDE_OFFSET);
+            spawnCubeParticles(world, blueCenter, COLOR_BLUE);
         } else {
-            spawnCubeParticles(world, basePos.add(-BLOCK_SPACING / 2, 0, 0), COLOR_RED);
+            Vec3d redCenter = basePos.add(rightX * SIDE_OFFSET, 0, rightZ * SIDE_OFFSET);
+            spawnCubeParticles(world, redCenter, COLOR_RED);
         }
     }
 
@@ -97,12 +102,16 @@ public class SirenManager {
     }
 
     private static UUID spawnBlockDisplay(ServerWorld world, Entity ghast, Vec3d basePos,
-                                           double xOffset, boolean isRed) {
+                                           double sideOffset, boolean isRed) {
         DisplayEntity.BlockDisplayEntity blockDisplay = new DisplayEntity.BlockDisplayEntity(
                 EntityType.BLOCK_DISPLAY, world);
 
-        double x = basePos.x + xOffset;
-        blockDisplay.refreshPositionAndAngles(x, basePos.y, basePos.z, ghast.getYaw(), 0);
+        float yawRad = (float) Math.toRadians(ghast.getYaw());
+        double rightX = Math.cos(yawRad) * sideOffset;
+        double rightZ = Math.sin(yawRad) * sideOffset;
+        blockDisplay.refreshPositionAndAngles(
+                basePos.x + rightX, basePos.y, basePos.z + rightZ,
+                ghast.getYaw(), 0);
 
         if (isRed) {
             blockDisplay.setBlockState(Blocks.REDSTONE_BLOCK.getDefaultState());
@@ -124,16 +133,16 @@ public class SirenManager {
     }
 
     private static void updateBlockDisplay(ServerWorld world, Entity ghast,
-                                            @Nullable UUID uuid, Vec3d basePos, double xOffset) {
+                                            @Nullable UUID uuid, Vec3d basePos, double sideOffset) {
         if (uuid == null) return;
         Entity entity = world.getEntity(uuid);
         if (entity instanceof DisplayEntity.BlockDisplayEntity blockDisplay) {
             float yawRad = (float) Math.toRadians(ghast.getYaw());
-            double localX = -Math.sin(yawRad) * xOffset;
-            double localZ = Math.cos(yawRad) * xOffset;
+            double rightX = Math.cos(yawRad) * sideOffset;
+            double rightZ = Math.sin(yawRad) * sideOffset;
 
             blockDisplay.teleport(world,
-                    basePos.x + localX, basePos.y, basePos.z + localZ,
+                    basePos.x + rightX, basePos.y, basePos.z + rightZ,
                     Set.of(), ghast.getYaw(), 0, false);
         }
     }
