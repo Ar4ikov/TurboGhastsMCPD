@@ -26,6 +26,9 @@ public class GhastVehicleData {
     private String particleId;
     private int particleColor;
     private double mileage;
+    private boolean gaiMode;
+    @Nullable private UUID sirenRedUuid;
+    @Nullable private UUID sirenBlueUuid;
 
     public GhastVehicleData(UUID ghastUuid, BlockPos homePos, String homeDimension,
                             long firstSeenTimestamp, long registrationDeadline) {
@@ -47,6 +50,9 @@ public class GhastVehicleData {
         this.particleId = "none";
         this.particleColor = 0xFF0000;
         this.mileage = 0.0;
+        this.gaiMode = false;
+        this.sirenRedUuid = null;
+        this.sirenBlueUuid = null;
     }
 
     public NbtCompound toNbt() {
@@ -77,6 +83,9 @@ public class GhastVehicleData {
         nbt.putString("ParticleId", particleId);
         nbt.putInt("ParticleColor", particleColor);
         nbt.putDouble("Mileage", mileage);
+        nbt.putBoolean("GaiMode", gaiMode);
+        if (sirenRedUuid != null) nbt.putString("SirenRedUuid", sirenRedUuid.toString());
+        if (sirenBlueUuid != null) nbt.putString("SirenBlueUuid", sirenBlueUuid.toString());
         return nbt;
     }
 
@@ -116,6 +125,11 @@ public class GhastVehicleData {
         data.particleId = nbt.getString("ParticleId", "none");
         data.particleColor = nbt.getInt("ParticleColor", 0xFF0000);
         data.mileage = nbt.getDouble("Mileage", 0.0);
+        data.gaiMode = nbt.getBoolean("GaiMode", false);
+        String sirenRedStr = nbt.getString("SirenRedUuid", "");
+        if (!sirenRedStr.isEmpty()) data.sirenRedUuid = UUID.fromString(sirenRedStr);
+        String sirenBlueStr = nbt.getString("SirenBlueUuid", "");
+        if (!sirenBlueStr.isEmpty()) data.sirenBlueUuid = UUID.fromString(sirenBlueStr);
         return data;
     }
 
@@ -153,6 +167,12 @@ public class GhastVehicleData {
     public double getMileage() { return mileage; }
     public void setMileage(double mileage) { this.mileage = mileage; }
     public void addMileage(double distance) { this.mileage += distance; }
+    public boolean isGaiMode() { return gaiMode; }
+    public void setGaiMode(boolean gaiMode) { this.gaiMode = gaiMode; }
+    @Nullable public UUID getSirenRedUuid() { return sirenRedUuid; }
+    public void setSirenRedUuid(@Nullable UUID u) { this.sirenRedUuid = u; }
+    @Nullable public UUID getSirenBlueUuid() { return sirenBlueUuid; }
+    public void setSirenBlueUuid(@Nullable UUID u) { this.sirenBlueUuid = u; }
 
     public long getRemainingTimeMs() {
         return registrationDeadline - System.currentTimeMillis();

@@ -25,8 +25,9 @@ public class PlateDisplayManager {
         String plateText = data.getPlateNumber();
         if (plateText.isEmpty()) return;
 
-        UUID frontUuid = spawnPlateEntity(world, ghast, plateText, FRONT_FORWARD_OFFSET);
-        UUID backUuid = spawnPlateEntity(world, ghast, plateText, BACK_FORWARD_OFFSET);
+        String displayText = data.isGaiMode() ? SirenManager.getGaiPlateText() : plateText;
+        UUID frontUuid = spawnPlateEntity(world, ghast, displayText, FRONT_FORWARD_OFFSET);
+        UUID backUuid = spawnPlateEntity(world, ghast, displayText, BACK_FORWARD_OFFSET);
 
         data.setFrontPlateEntityUuid(frontUuid);
         data.setBackPlateEntityUuid(backUuid);
@@ -93,6 +94,27 @@ public class PlateDisplayManager {
                 ghast.getY() + Y_OFFSET,
                 ghast.getZ() + offsetZ
         );
+    }
+
+    public static void refreshPlateText(ServerWorld world, GhastVehicleData data) {
+        String displayText = data.isGaiMode() ? SirenManager.getGaiPlateText() : data.getPlateNumber();
+        if (displayText.isEmpty()) return;
+
+        Text styledText = Text.literal(displayText).setStyle(
+                Style.EMPTY.withColor(Formatting.GOLD).withBold(true));
+
+        if (data.getFrontPlateEntityUuid() != null) {
+            Entity e = world.getEntity(data.getFrontPlateEntityUuid());
+            if (e instanceof DisplayEntity.TextDisplayEntity td) {
+                td.setText(styledText);
+            }
+        }
+        if (data.getBackPlateEntityUuid() != null) {
+            Entity e = world.getEntity(data.getBackPlateEntityUuid());
+            if (e instanceof DisplayEntity.TextDisplayEntity td) {
+                td.setText(styledText);
+            }
+        }
     }
 
     public static void validatePlates(ServerWorld world, Entity ghast, GhastVehicleData data, GhastRegistryState state) {

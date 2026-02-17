@@ -11,6 +11,7 @@ public class SpeedStageManager {
     public static final double STAGE_1_SPEED = 0.12;
     public static final double STAGE_2_SPEED = 0.14;
     public static final double STAGE_3_SPEED = 0.16;
+    public static final double GAI_SPEED = 0.2;
 
     public static double getSpeedForStage(int stage) {
         return switch (stage) {
@@ -25,6 +26,13 @@ public class SpeedStageManager {
         EntityAttributeInstance attr = ghast.getAttributeInstance(EntityAttributes.FLYING_SPEED);
         if (attr != null) {
             attr.setBaseValue(getSpeedForStage(stage));
+        }
+    }
+
+    public static void applyGaiSpeed(HappyGhastEntity ghast) {
+        EntityAttributeInstance attr = ghast.getAttributeInstance(EntityAttributes.FLYING_SPEED);
+        if (attr != null) {
+            attr.setBaseValue(GAI_SPEED);
         }
     }
 

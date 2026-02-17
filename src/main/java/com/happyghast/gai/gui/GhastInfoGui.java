@@ -6,9 +6,11 @@ import com.happyghast.gai.data.GhastVehicleData;
 import com.happyghast.gai.data.PlateGenerator;
 import com.happyghast.gai.handler.TickHandler;
 import com.happyghast.gai.plate.PlateDisplayManager;
+import com.happyghast.gai.plate.SirenManager;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.AnvilInputGui;
 import eu.pb4.sgui.api.gui.SimpleGui;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.HappyGhastEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -76,9 +78,10 @@ public class GhastInfoGui {
 
         int currentStage = data.getStage();
         String stageColor = SpeedStageManager.getStageColor(currentStage);
+        double roSpeed = data.isGaiMode() ? SpeedStageManager.GAI_SPEED : SpeedStageManager.getSpeedForStage(currentStage);
         gui.setSlot(29, new GuiElementBuilder(SpeedStageManager.getStageIcon(currentStage))
                 .setName(Text.literal("\u00a7f\u0421\u0442\u0435\u0439\u0434\u0436: " + stageColor + SpeedStageManager.getStageName(currentStage)))
-                .addLoreLine(Text.literal("\u00a77\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u00a7f" + SpeedStageManager.getSpeedForStage(currentStage)))
+                .addLoreLine(Text.literal("\u00a77\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u00a7f" + roSpeed))
                 .build());
 
         ParticleTrailManager.ParticlePreset preset = ParticleTrailManager.getPreset(data.getParticleId());
@@ -145,9 +148,13 @@ public class GhastInfoGui {
         int currentStage = data.getStage();
         int maxStage = data.getMaxStage();
         String stageColor = SpeedStageManager.getStageColor(currentStage);
+        double displaySpeed = data.isGaiMode() ? SpeedStageManager.GAI_SPEED : SpeedStageManager.getSpeedForStage(currentStage);
         GuiElementBuilder stageBuilder = new GuiElementBuilder(SpeedStageManager.getStageIcon(currentStage))
                 .setName(Text.literal("\u00a7f\u0421\u0442\u0435\u0439\u0434\u0436: " + stageColor + SpeedStageManager.getStageName(currentStage)))
-                .addLoreLine(Text.literal("\u00a77\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u00a7f" + SpeedStageManager.getSpeedForStage(currentStage)));
+                .addLoreLine(Text.literal("\u00a77\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u00a7f" + displaySpeed));
+        if (data.isGaiMode()) {
+            stageBuilder.addLoreLine(Text.literal("\u00a79\u0413\u0410\u0418 \u0440\u0435\u0436\u0438\u043C \u2014 \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C \u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0430"));
+        }
 
         if (canModify && maxStage >= 1) {
             if (maxStage >= 3) {
@@ -280,8 +287,9 @@ public class GhastInfoGui {
         // Status
         String statusText = data.isImpounded()
                 ? "\u00a7c\u041D\u0430 \u0448\u0442\u0440\u0430\u0444\u0441\u0442\u043E\u044F\u043D\u043A\u0435"
+                : data.isGaiMode() ? "\u00a79\u0413\u0410\u0418"
                 : data.isRegistered() ? "\u00a7a\u0410\u043A\u0442\u0438\u0432\u0435\u043D" : "\u00a7e\u041D\u0435 \u0437\u0430\u0440\u0435\u0433.";
-        gui.setSlot(14, new GuiElementBuilder(data.isImpounded() ? Items.BARRIER : data.isRegistered() ? Items.EMERALD : Items.PAPER)
+        gui.setSlot(14, new GuiElementBuilder(data.isImpounded() ? Items.BARRIER : data.isGaiMode() ? Items.LAPIS_BLOCK : data.isRegistered() ? Items.EMERALD : Items.PAPER)
                 .setName(Text.literal("\u00a7f\u0421\u0442\u0430\u0442\u0443\u0441: " + statusText))
                 .build());
 
@@ -344,6 +352,60 @@ public class GhastInfoGui {
                         if (onBack != null) onBack.run();
                     })
                     .build());
+        }
+
+        if (data.isRegistered()) {
+            if (data.isGaiMode()) {
+                gui.setSlot(39, new GuiElementBuilder(Items.REDSTONE_BLOCK)
+                        .setName(Text.literal("\u00a7c[\u0410\u0414\u041C\u0418\u041D] \u0421\u043D\u044F\u0442\u044C \u0413\u0410\u0418"))
+                        .addLoreLine(Text.literal("\u00a77\u0412\u0435\u0440\u043D\u0443\u0442\u044C \u0432 \u043E\u0431\u044B\u0447\u043D\u043E\u0433\u043E \u0433\u0430\u0441\u0442\u0430"))
+                        .addLoreLine(Text.literal("\u00a77\u041D\u043E\u043C\u0435\u0440: \u00a7e" + data.getPlateNumber()))
+                        .setCallback((index, type, action) -> {
+                            data.setGaiMode(false);
+                            SirenManager.removeSirensAllWorlds(server, data);
+                            state.markDirty();
+
+                            Entity ghastEntity = TickHandler.findGhastInWorlds(server, data.getGhastUuid());
+                            if (ghastEntity != null) {
+                                ServerWorld ghastWorld = (ServerWorld) ghastEntity.getEntityWorld();
+                                PlateDisplayManager.refreshPlateText(ghastWorld, data);
+                                if (data.getStage() > 0) {
+                                    SpeedStageManager.applyStageSpeed((HappyGhastEntity) ghastEntity, data.getStage());
+                                }
+                            }
+
+                            admin.sendMessage(Text.literal(
+                                    "\u00a7a[\u0413\u0410\u0418] \u0413\u0430\u0441\u0442 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0451\u043D \u0432 \u043E\u0431\u044B\u0447\u043D\u044B\u0439 \u0440\u0435\u0436\u0438\u043C."), false);
+                            gui.close();
+                            if (onBack != null) onBack.run();
+                        })
+                        .build());
+            } else {
+                gui.setSlot(39, new GuiElementBuilder(Items.LAPIS_BLOCK)
+                        .setName(Text.literal("\u00a79[\u0410\u0414\u041C\u0418\u041D] \u041F\u0440\u0435\u0432\u0440\u0430\u0442\u0438\u0442\u044C \u0432 \u0413\u0410\u0418"))
+                        .addLoreLine(Text.literal("\u00a77\u041D\u043E\u043C\u0435\u0440 \u0441\u043C\u0435\u043D\u0438\u0442\u0441\u044F \u043D\u0430: \u00a7e" + SirenManager.getGaiPlateText()))
+                        .addLoreLine(Text.literal("\u00a77\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u00a7e" + SpeedStageManager.GAI_SPEED))
+                        .addLoreLine(Text.literal("\u00a77\u041C\u0438\u0433\u0430\u043B\u043A\u0438 \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u0443\u044E\u0442\u0441\u044F"))
+                        .setCallback((index, type, action) -> {
+                            data.setGaiMode(true);
+                            state.markDirty();
+
+                            Entity ghastEntity = TickHandler.findGhastInWorlds(server, data.getGhastUuid());
+                            if (ghastEntity != null) {
+                                ServerWorld ghastWorld = (ServerWorld) ghastEntity.getEntityWorld();
+                                PlateDisplayManager.refreshPlateText(ghastWorld, data);
+                                SirenManager.createSirens(ghastWorld, ghastEntity, data);
+                                SpeedStageManager.applyGaiSpeed((HappyGhastEntity) ghastEntity);
+                                state.markDirty();
+                            }
+
+                            admin.sendMessage(Text.literal(
+                                    "\u00a7a[\u0413\u0410\u0418] \u0413\u0430\u0441\u0442 \u043F\u0440\u0435\u0432\u0440\u0430\u0449\u0451\u043D \u0432 \u0413\u0410\u0418-\u0433\u0430\u0441\u0442\u0430!"), false);
+                            gui.close();
+                            if (onBack != null) onBack.run();
+                        })
+                        .build());
+            }
         }
 
         if (onBack != null) {

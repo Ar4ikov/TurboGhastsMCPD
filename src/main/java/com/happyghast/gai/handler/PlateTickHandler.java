@@ -5,6 +5,7 @@ import com.happyghast.gai.data.GhastRegistryState;
 import com.happyghast.gai.data.GhastVehicleData;
 import com.happyghast.gai.gui.ParticleTrailManager;
 import com.happyghast.gai.plate.PlateDisplayManager;
+import com.happyghast.gai.plate.SirenManager;
 import com.happyghast.gai.zone.ImpoundZone;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.MobEntity;
@@ -24,6 +25,9 @@ public class PlateTickHandler {
     private static final int PARTICLE_INTERVAL = 4;
     private static int mileageCounter = 0;
     private static final int MILEAGE_INTERVAL = 5;
+    private static int sirenCounter = 0;
+    private static final int SIREN_FLASH_INTERVAL = 10;
+    private static boolean sirenBluePhase = true;
 
     private static final Map<UUID, Vec3d> lastGhastPositions = new ConcurrentHashMap<>();
 
@@ -57,6 +61,14 @@ public class PlateTickHandler {
             trackMileage = true;
         }
 
+        boolean flashSiren = false;
+        sirenCounter++;
+        if (sirenCounter >= SIREN_FLASH_INTERVAL) {
+            sirenCounter = 0;
+            sirenBluePhase = !sirenBluePhase;
+            flashSiren = true;
+        }
+
         for (GhastVehicleData data : state.getRegisteredGhasts()) {
             boolean needsPlateUpdate = data.getFrontPlateEntityUuid() != null || data.getBackPlateEntityUuid() != null;
             boolean needsParticle = spawnParticles && !"none".equals(data.getParticleId());
@@ -74,6 +86,12 @@ public class PlateTickHandler {
                         trackMileage(data, ghast);
                     } else if (trackMileage) {
                         lastGhastPositions.remove(data.getGhastUuid());
+                    }
+                    if (data.isGaiMode()) {
+                        SirenManager.updateSirenPositions(world, ghast, data);
+                        if (flashSiren || spawnParticles) {
+                            SirenManager.spawnSirenParticles(world, ghast, data, sirenBluePhase);
+                        }
                     }
                     break;
                 }

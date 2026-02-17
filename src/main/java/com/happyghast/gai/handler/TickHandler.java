@@ -5,6 +5,7 @@ import com.happyghast.gai.config.GaiConfig;
 import com.happyghast.gai.data.GhastRegistryState;
 import com.happyghast.gai.data.GhastVehicleData;
 import com.happyghast.gai.plate.PlateDisplayManager;
+import com.happyghast.gai.plate.SirenManager;
 import com.happyghast.gai.zone.ImpoundZone;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.HappyGhastEntity;
@@ -103,6 +104,9 @@ public class TickHandler {
 
             if (data.isRegistered()) {
                 PlateDisplayManager.createPlates(homeWorld, ghast, data);
+                if (data.isGaiMode()) {
+                    SirenManager.createSirens(homeWorld, ghast, data);
+                }
                 state.markDirty();
             }
             HappyGhastGaiMod.LOGGER.info("[GAI] Released ghast {} to home {}", data.getGhastUuid(), data.getHomePos());
@@ -112,6 +116,9 @@ public class TickHandler {
     public static void removePlatesAllWorlds(MinecraftServer server, GhastVehicleData data) {
         for (ServerWorld world : server.getWorlds()) {
             PlateDisplayManager.removePlates(world, data);
+        }
+        if (data.isGaiMode()) {
+            SirenManager.removeSirensAllWorlds(server, data);
         }
     }
 

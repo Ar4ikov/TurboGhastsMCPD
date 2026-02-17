@@ -6,6 +6,7 @@ import com.happyghast.gai.data.GhastRegistryState;
 import com.happyghast.gai.data.GhastVehicleData;
 import com.happyghast.gai.gui.SpeedStageManager;
 import com.happyghast.gai.plate.PlateDisplayManager;
+import com.happyghast.gai.plate.SirenManager;
 import net.minecraft.entity.passive.HappyGhastEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -52,7 +53,10 @@ public class GhastTrackingHandler {
                     GhastVehicleData data = state.getGhast(ghast.getUuid());
                     if (data != null && data.isRegistered()) {
                         PlateDisplayManager.validatePlates(world, ghast, data, state);
-                        if (data.getStage() > 0) {
+                        if (data.isGaiMode()) {
+                            SpeedStageManager.applyGaiSpeed(ghast);
+                            SirenManager.validateSirens(world, ghast, data);
+                        } else if (data.getStage() > 0) {
                             SpeedStageManager.applyStageSpeed(ghast, data.getStage());
                         }
                     }

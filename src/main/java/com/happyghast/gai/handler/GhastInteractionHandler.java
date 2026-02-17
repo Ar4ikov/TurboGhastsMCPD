@@ -15,6 +15,7 @@ import net.minecraft.entity.passive.HappyGhastEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
@@ -53,6 +54,9 @@ public class GhastInteractionHandler {
             if (GhastMenuLock.tryLock(ghast.getUuid(), serverPlayer, isAdmin, ghast, server)) {
                 GhastInfoGui.open(serverPlayer, ghast, data, state);
             }
+        } else if (data.isGaiMode()) {
+            serverPlayer.sendMessage(Text.literal(
+                    "\u00a7c[\u0413\u0410\u0418] \u0418\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044F \u043E \u0413\u0410\u0418-\u0433\u0430\u0441\u0442\u0435 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430."), false);
         } else {
             GhastInfoGui.openReadOnly(serverPlayer, ghast, data, state);
         }
