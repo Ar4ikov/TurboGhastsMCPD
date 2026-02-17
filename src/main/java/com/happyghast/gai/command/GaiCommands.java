@@ -5,6 +5,8 @@ import com.happyghast.gai.data.GhastRegistryState;
 import com.happyghast.gai.data.GhastVehicleData;
 import com.happyghast.gai.gui.AdminConfigGui;
 import com.happyghast.gai.gui.GhastInfoGui;
+import com.happyghast.gai.gui.GhastSaleGui;
+import com.happyghast.gai.gui.GhastSaleManager;
 import com.happyghast.gai.gui.GhastTpGui;
 import com.happyghast.gai.gui.PlayerGhastsGui;
 import com.happyghast.gai.gui.ServerStatsGui;
@@ -59,6 +61,35 @@ public class GaiCommands {
                                         return 0;
                                     }
                                     GhastTpGui.executeTp(player, data, state, isAdmin);
+                                    return 1;
+                                })))
+
+                .then(CommandManager.literal("_acceptsale")
+                        .then(CommandManager.argument("offerid", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+                                    String offerId = StringArgumentType.getString(ctx, "offerid");
+                                    MinecraftServer server = ctx.getSource().getServer();
+                                    GhastRegistryState state = GhastRegistryState.get(server);
+                                    GhastSaleManager.SaleOffer offer = GhastSaleManager.getOffer(offerId);
+                                    if (offer == null) {
+                                        player.sendMessage(Text.literal(
+                                                "\u00a7c[\u0413\u0410\u0418] \u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0438\u0441\u0442\u0435\u043A\u043B\u043E \u0438\u043B\u0438 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E."), false);
+                                        return 0;
+                                    }
+                                    if (!offer.buyerUuid().equals(player.getUuid())) {
+                                        player.sendMessage(Text.literal(
+                                                "\u00a7c[\u0413\u0410\u0418] \u042D\u0442\u043E \u043F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043D\u0435 \u0434\u043B\u044F \u0432\u0430\u0441."), false);
+                                        return 0;
+                                    }
+                                    GhastVehicleData data = state.getGhast(offer.ghastUuid());
+                                    if (data == null) {
+                                        player.sendMessage(Text.literal(
+                                                "\u00a7c[\u0413\u0410\u0418] \u0413\u0430\u0441\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u0435\u0442."), false);
+                                        GhastSaleManager.removeOffer(offerId);
+                                        return 0;
+                                    }
+                                    GhastSaleGui.openBuyerConfirmation(player, offerId, offer, data, state);
                                     return 1;
                                 })))
 

@@ -30,8 +30,14 @@ public class PlateTickHandler {
     private static final Map<UUID, Long> TP_FREEZE_UNTIL = new ConcurrentHashMap<>();
     private static final long TP_FREEZE_DURATION_MS = 3000;
 
+    private static final long SALE_FREEZE_DURATION_MS = 10000;
+
     public static void setTpFreeze(UUID ghastUuid) {
         TP_FREEZE_UNTIL.put(ghastUuid, System.currentTimeMillis() + TP_FREEZE_DURATION_MS);
+    }
+
+    public static void setSaleFreeze(UUID ghastUuid) {
+        TP_FREEZE_UNTIL.put(ghastUuid, System.currentTimeMillis() + SALE_FREEZE_DURATION_MS);
     }
 
     public static void onServerTick(MinecraftServer server) {

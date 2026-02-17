@@ -136,6 +136,14 @@ public class GhastRegistryState extends PersistentState {
 
     public Set<String> getUsedPlateNumbers() { return Collections.unmodifiableSet(usedPlateNumbers); }
 
+    public void replateGhast(GhastVehicleData data, String newPlate) {
+        String oldPlate = data.getPlateNumber();
+        if (!oldPlate.isEmpty()) usedPlateNumbers.remove(oldPlate);
+        data.setPlateNumber(newPlate);
+        usedPlateNumbers.add(newPlate);
+        markDirty();
+    }
+
     public GaiConfig getConfig() { return config; }
 
     public void saveConfig() { markDirty(); }

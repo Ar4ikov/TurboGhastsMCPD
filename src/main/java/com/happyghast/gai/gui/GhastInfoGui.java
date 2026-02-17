@@ -3,7 +3,9 @@ package com.happyghast.gai.gui;
 import com.happyghast.gai.config.GaiConfig;
 import com.happyghast.gai.data.GhastRegistryState;
 import com.happyghast.gai.data.GhastVehicleData;
+import com.happyghast.gai.data.PlateGenerator;
 import com.happyghast.gai.handler.TickHandler;
+import com.happyghast.gai.plate.PlateDisplayManager;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.AnvilInputGui;
 import eu.pb4.sgui.api.gui.SimpleGui;
@@ -109,10 +111,12 @@ public class GhastInfoGui {
         fillInfoSlots(gui, player, data, config);
 
         boolean canEdit = !data.isImpounded();
+        boolean canModify = (isOwner || isAdmin) && canEdit;
 
-        // Owner: rename
-        if (isOwner && canEdit) {
-            String costStr = formatCost(config.getRenameCostEmeralds(), config.getRenameCostDiamonds());
+        // Rename
+        if (canModify) {
+            String costStr = isAdmin ? "\u00a7a\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E (\u0430\u0434\u043C\u0438\u043D)"
+                    : formatCost(config.getRenameCostEmeralds(), config.getRenameCostDiamonds());
             gui.setSlot(10, new GuiElementBuilder(Items.GHAST_TEAR)
                     .setName(Text.literal("\u00a7f\u0418\u043C\u044F: \u00a7a" + data.getCustomName()))
                     .addLoreLine(Text.literal("\u00a7e\u041A\u043B\u0438\u043A\u043D\u0438\u0442\u0435 \u0434\u043B\u044F \u0441\u043C\u0435\u043D\u044B \u0438\u043C\u0435\u043D\u0438"))
@@ -124,8 +128,8 @@ public class GhastInfoGui {
                     .build());
         }
 
-        // Owner: harness color
-        if (isOwner && canEdit) {
+        // Harness color
+        if (canModify) {
             gui.setSlot(16, new GuiElementBuilder(HarnessManager.getWoolItem(data.getHarnessColor()))
                     .setName(Text.literal("\u00a7f\u0421\u0431\u0440\u0443\u044F: \u00a7e" + HarnessManager.getColorName(data.getHarnessColor())))
                     .addLoreLine(Text.literal("\u00a7e\u041A\u043B\u0438\u043A\u043D\u0438\u0442\u0435 \u0434\u043B\u044F \u0441\u043C\u0435\u043D\u044B \u0446\u0432\u0435\u0442\u0430"))
@@ -137,7 +141,7 @@ public class GhastInfoGui {
                     .build());
         }
 
-        // Owner: stage (clickable to open stage selection)
+        // Stage (clickable to open stage selection)
         int currentStage = data.getStage();
         int maxStage = data.getMaxStage();
         String stageColor = SpeedStageManager.getStageColor(currentStage);
@@ -145,7 +149,7 @@ public class GhastInfoGui {
                 .setName(Text.literal("\u00a7f\u0421\u0442\u0435\u0439\u0434\u0436: " + stageColor + SpeedStageManager.getStageName(currentStage)))
                 .addLoreLine(Text.literal("\u00a77\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u00a7f" + SpeedStageManager.getSpeedForStage(currentStage)));
 
-        if (isOwner && canEdit && maxStage >= 1) {
+        if (canModify && maxStage >= 1) {
             if (maxStage >= 3) {
                 stageBuilder.addLoreLine(Text.literal("\u00a7a\u0412\u0441\u0435 \u0441\u0442\u0435\u0439\u0434\u0436\u0438 \u043E\u0442\u043A\u0440\u044B\u0442\u044B!"));
                 stageBuilder.glow();
@@ -159,14 +163,15 @@ public class GhastInfoGui {
         }
         gui.setSlot(29, stageBuilder.build());
 
-        // Owner: particle trail
-        if (isOwner && canEdit) {
+        // Particle trail
+        if (canModify) {
             ParticleTrailManager.ParticlePreset currentPreset = ParticleTrailManager.getPreset(data.getParticleId());
             String particleName = currentPreset.name();
             if (currentPreset.isDust()) {
                 particleName += " (" + ParticleTrailManager.getDustColorName(data.getParticleColor()) + ")";
             }
-            String particleCostStr = formatCost(config.getParticleCostEmeralds(), config.getParticleCostDiamonds());
+            String particleCostStr = isAdmin ? "\u00a7a\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E (\u0430\u0434\u043C\u0438\u043D)"
+                    : formatCost(config.getParticleCostEmeralds(), config.getParticleCostDiamonds());
             gui.setSlot(33, new GuiElementBuilder(currentPreset.icon())
                     .setName(Text.literal("\u00a7f\u0427\u0430\u0441\u0442\u0438\u0446\u044B: \u00a7d" + particleName))
                     .addLoreLine(Text.literal("\u00a7e\u041A\u043B\u0438\u043A\u043D\u0438\u0442\u0435 \u0434\u043B\u044F \u0441\u043C\u0435\u043D\u044B"))
@@ -174,6 +179,35 @@ public class GhastInfoGui {
                     .setCallback((index, type, action) -> {
                         navigateClose(gui, player);
                         openParticleSelection(player, ghast, data, state);
+                    })
+                    .build());
+        }
+
+        // Replate (owner only, costs nether stars)
+        if (isOwner && canEdit) {
+            int starCost = config.getReplateCostNetherStars();
+            gui.setSlot(31, new GuiElementBuilder(Items.NETHER_STAR)
+                    .setName(Text.literal("\u00a7f\u0421\u043C\u0435\u043D\u0438\u0442\u044C \u043D\u043E\u043C\u0435\u0440"))
+                    .addLoreLine(Text.literal("\u00a77\u0422\u0435\u043A\u0443\u0449\u0438\u0439: \u00a7e" + data.getPlateNumber()))
+                    .addLoreLine(Text.literal("\u00a7e\u041A\u043B\u0438\u043A\u043D\u0438\u0442\u0435 \u0434\u043B\u044F \u0441\u043C\u0435\u043D\u044B"))
+                    .addLoreLine(Text.literal("\u00a77\u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C: \u00a7d" + starCost + " \u0437\u0432\u0435\u0437\u0434 \u041D\u0435\u0437\u0435\u0440\u0430"))
+                    .setCallback((index, type, action) -> {
+                        navigateClose(gui, player);
+                        openReplateInput(player, ghast, data, state);
+                    })
+                    .build());
+        }
+
+        // Sell (owner only, not impounded)
+        if (isOwner && canEdit) {
+            String disposalStr = formatCost(config.getDisposalFeeEmeralds(), config.getDisposalFeeDiamonds());
+            gui.setSlot(35, new GuiElementBuilder(Items.EMERALD_BLOCK)
+                    .setName(Text.literal("\u00a7a\u041F\u0440\u043E\u0434\u0430\u0442\u044C \u0433\u0430\u0441\u0442\u0430"))
+                    .addLoreLine(Text.literal("\u00a7e\u041A\u043B\u0438\u043A\u043D\u0438\u0442\u0435 \u0434\u043B\u044F \u043F\u0440\u043E\u0434\u0430\u0436\u0438"))
+                    .addLoreLine(Text.literal("\u00a77\u0423\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440: " + disposalStr))
+                    .setCallback((index, type, action) -> {
+                        gui.close();
+                        GhastSaleGui.openPlayerSelection(player, ghast, data, state);
                     })
                     .build());
         }
@@ -350,8 +384,10 @@ public class GhastInfoGui {
     private static void openRenamePayment(ServerPlayerEntity player, HappyGhastEntity ghast,
                                             GhastVehicleData data, GhastRegistryState state, String newName) {
         GaiConfig config = state.getConfig();
-        int emeralds = config.getRenameCostEmeralds();
-        int diamonds = config.getRenameCostDiamonds();
+        boolean adminFree = !player.getUuid().equals(data.getOwnerUuid())
+                && player.getCommandSource().getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS));
+        int emeralds = adminFree ? 0 : config.getRenameCostEmeralds();
+        int diamonds = adminFree ? 0 : config.getRenameCostDiamonds();
 
         if (emeralds == 0 && diamonds == 0) {
             applyRename(player, ghast, data, state, newName);
@@ -482,8 +518,10 @@ public class GhastInfoGui {
     private static void openStagePurchaseConfirm(ServerPlayerEntity player, HappyGhastEntity ghast,
                                                   GhastVehicleData data, GhastRegistryState state, int targetStage) {
         GaiConfig config = state.getConfig();
-        int emeralds = targetStage == 2 ? config.getStage2CostEmeralds() : config.getStage3CostEmeralds();
-        int diamonds = targetStage == 2 ? config.getStage2CostDiamonds() : config.getStage3CostDiamonds();
+        boolean adminFree = !player.getUuid().equals(data.getOwnerUuid())
+                && player.getCommandSource().getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS));
+        int emeralds = adminFree ? 0 : (targetStage == 2 ? config.getStage2CostEmeralds() : config.getStage3CostEmeralds());
+        int diamonds = adminFree ? 0 : (targetStage == 2 ? config.getStage2CostDiamonds() : config.getStage3CostDiamonds());
 
         SimpleGui gui = createLockedGui(ScreenHandlerType.GENERIC_9X1, player, ghast);
         gui.setTitle(Text.literal("\u00a76\u0413\u0410\u0418 | \u041F\u043E\u043A\u0443\u043F\u043A\u0430 \u0421\u0442\u0435\u0439\u0434\u0436 " + targetStage));
@@ -676,8 +714,10 @@ public class GhastInfoGui {
                                              GhastVehicleData data, GhastRegistryState state,
                                              String particleId, int dustColor) {
         GaiConfig config = state.getConfig();
-        int emeralds = config.getParticleCostEmeralds();
-        int diamonds = config.getParticleCostDiamonds();
+        boolean adminFree = !player.getUuid().equals(data.getOwnerUuid())
+                && player.getCommandSource().getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS));
+        int emeralds = adminFree ? 0 : config.getParticleCostEmeralds();
+        int diamonds = adminFree ? 0 : config.getParticleCostDiamonds();
 
         if (emeralds == 0 && diamonds == 0) {
             applyParticle(player, ghast, data, state, particleId, dustColor);
@@ -753,6 +793,111 @@ public class GhastInfoGui {
         player.sendMessage(Text.literal(
                 "\u00a7a[\u0413\u0410\u0418] \u0427\u0430\u0441\u0442\u0438\u0446\u044B \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u044B \u043D\u0430: \u00a7d" + displayName), false);
         open(player, ghast, data, state);
+    }
+
+    // === Replate ===
+
+    private static void openReplateInput(ServerPlayerEntity player, HappyGhastEntity ghast,
+                                          GhastVehicleData data, GhastRegistryState state) {
+        AnvilInputGui gui = createLockedAnvilGui(player, ghast);
+        gui.setTitle(Text.literal("\u041D\u043E\u0432\u044B\u0439 \u043D\u043E\u043C\u0435\u0440 (\u0410000\u0410\u0410)"));
+        gui.setDefaultInputValue(data.getPlateNumber().replace(" 52", ""));
+
+        gui.setSlot(2, new GuiElementBuilder(Items.NETHER_STAR)
+                .setName(Text.literal("\u00a7a\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C"))
+                .setCallback((index, type, action) -> {
+                    String input = gui.getInput();
+                    if (input == null || input.isBlank()) {
+                        player.sendMessage(Text.literal("\u00a7c[\u0413\u0410\u0418] \u041D\u043E\u043C\u0435\u0440 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u043F\u0443\u0441\u0442\u044B\u043C!"), false);
+                        gui.close();
+                        return;
+                    }
+                    String normalized = PlateGenerator.normalize(input.trim().toUpperCase());
+                    if (!PlateGenerator.isValidFormat(normalized)) {
+                        player.sendMessage(Text.literal(
+                                "\u00a7c[\u0413\u0410\u0418] \u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0444\u043E\u0440\u043C\u0430\u0442! \u0424\u043E\u0440\u043C\u0430\u0442: \u0411000\u0411\u0411 (\u0411 = \u0410\u0412\u0415\u041A\u041C\u041D\u041E\u0420\u0421\u0422\u0423\u0425)"), false);
+                        gui.close();
+                        return;
+                    }
+                    if (state.getUsedPlateNumbers().contains(normalized) && !normalized.equals(data.getPlateNumber())) {
+                        player.sendMessage(Text.literal(
+                                "\u00a7c[\u0413\u0410\u0418] \u041D\u043E\u043C\u0435\u0440 " + normalized + " \u0443\u0436\u0435 \u0437\u0430\u043D\u044F\u0442!"), false);
+                        gui.close();
+                        return;
+                    }
+                    if (normalized.equals(data.getPlateNumber())) {
+                        player.sendMessage(Text.literal(
+                                "\u00a7e[\u0413\u0410\u0418] \u042D\u0442\u043E \u0443\u0436\u0435 \u0432\u0430\u0448 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u043D\u043E\u043C\u0435\u0440!"), false);
+                        gui.close();
+                        return;
+                    }
+                    navigateCloseAnvil(gui, player);
+                    openReplatePayment(player, ghast, data, state, normalized);
+                })
+                .build());
+        gui.open();
+    }
+
+    private static void openReplatePayment(ServerPlayerEntity player, HappyGhastEntity ghast,
+                                            GhastVehicleData data, GhastRegistryState state,
+                                            String newPlate) {
+        GaiConfig config = state.getConfig();
+        int starCost = config.getReplateCostNetherStars();
+
+        SimpleGui gui = createLockedGui(ScreenHandlerType.GENERIC_9X1, player, ghast);
+        gui.setTitle(Text.literal("\u00a76\u0413\u0410\u0418 | \u0421\u043C\u0435\u043D\u0430 \u043D\u043E\u043C\u0435\u0440\u0430"));
+
+        gui.setSlot(2, new GuiElementBuilder(Items.NAME_TAG)
+                .setName(Text.literal("\u00a7f\u041D\u043E\u0432\u044B\u0439: \u00a7e" + newPlate))
+                .addLoreLine(Text.literal("\u00a77\u0421\u0442\u0430\u0440\u044B\u0439: \u00a78" + data.getPlateNumber()))
+                .build());
+
+        gui.setSlot(4, new GuiElementBuilder(Items.NETHER_STAR)
+                .setName(Text.literal("\u00a7d\u0417\u0432\u0435\u0437\u0434\u044B \u041D\u0435\u0437\u0435\u0440\u0430: " + starCost))
+                .setCount(Math.max(1, Math.min(64, starCost)))
+                .build());
+
+        gui.setSlot(6, new GuiElementBuilder(Items.LIME_STAINED_GLASS_PANE)
+                .setName(Text.literal("\u00a7a\u041E\u043F\u043B\u0430\u0442\u0438\u0442\u044C"))
+                .setCallback((index, type, action) -> {
+                    if (countItem(player, Items.NETHER_STAR) < starCost) {
+                        player.sendMessage(Text.literal(
+                                "\u00a7c[\u0413\u0410\u0418] \u041D\u0435\u0434\u043E\u0441\u0442\u0430\u0442\u043E\u0447\u043D\u043E \u0437\u0432\u0451\u0437\u0434 \u041D\u0435\u0437\u0435\u0440\u0430!"), false);
+                        gui.close();
+                        return;
+                    }
+                    if (state.getUsedPlateNumbers().contains(newPlate) && !newPlate.equals(data.getPlateNumber())) {
+                        player.sendMessage(Text.literal(
+                                "\u00a7c[\u0413\u0410\u0418] \u041D\u043E\u043C\u0435\u0440 " + newPlate + " \u0443\u0436\u0435 \u0437\u0430\u043D\u044F\u0442!"), false);
+                        gui.close();
+                        return;
+                    }
+                    removeItems(player, Items.NETHER_STAR, starCost);
+                    config.recordTransaction("replate", starCost, 0);
+
+                    // Remove old plates
+                    ServerWorld world = (ServerWorld) ghast.getEntityWorld();
+                    MinecraftServer server = world.getServer();
+                    TickHandler.removePlatesAllWorlds(server, data);
+
+                    // Update plate in registry
+                    state.replateGhast(data, newPlate);
+
+                    // Recreate plates
+                    PlateDisplayManager.createPlates(world, ghast, data);
+
+                    player.sendMessage(Text.literal(
+                            "\u00a7a[\u0413\u0410\u0418] \u041D\u043E\u043C\u0435\u0440 \u0438\u0437\u043C\u0435\u043D\u0451\u043D: \u00a7e" + newPlate), false);
+                    gui.close();
+                })
+                .build());
+
+        gui.setSlot(8, new GuiElementBuilder(Items.RED_STAINED_GLASS_PANE)
+                .setName(Text.literal("\u00a7c\u041E\u0442\u043C\u0435\u043D\u0430"))
+                .setCallback((index, type, action) -> gui.close())
+                .build());
+
+        gui.open();
     }
 
     // === Utility ===

@@ -18,6 +18,9 @@ public class GaiConfig {
     private int stage3CostDiamonds = 5;
     private int particleCostEmeralds = 3;
     private int particleCostDiamonds = 1;
+    private int replateCostNetherStars = 1;
+    private int disposalFeeEmeralds = 5;
+    private int disposalFeeDiamonds = 2;
     private long registrationPeriodMs = 86400000L;
     private long gracePeriodMs = 172800000L;
     @Nullable private BlockPos impoundCorner1 = null;
@@ -41,6 +44,11 @@ public class GaiConfig {
     private int statReleaseEmeralds = 0;
     private int statReleaseDiamonds = 0;
     private int statReleaseCount = 0;
+    private int statReplateStars = 0;
+    private int statReplateCount = 0;
+    private int statSaleEmeralds = 0;
+    private int statSaleDiamonds = 0;
+    private int statSaleCount = 0;
 
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
@@ -56,6 +64,9 @@ public class GaiConfig {
         nbt.putInt("Stage3CostDiamonds", stage3CostDiamonds);
         nbt.putInt("ParticleCostEmeralds", particleCostEmeralds);
         nbt.putInt("ParticleCostDiamonds", particleCostDiamonds);
+        nbt.putInt("ReplateCostStars", replateCostNetherStars);
+        nbt.putInt("DisposalFeeE", disposalFeeEmeralds);
+        nbt.putInt("DisposalFeeD", disposalFeeDiamonds);
         nbt.putLong("RegPeriodMs", registrationPeriodMs);
         nbt.putLong("GracePeriodMs", gracePeriodMs);
         if (impoundCorner1 != null) {
@@ -88,6 +99,11 @@ public class GaiConfig {
         nbt.putInt("StatRelE", statReleaseEmeralds);
         nbt.putInt("StatRelD", statReleaseDiamonds);
         nbt.putInt("StatRelC", statReleaseCount);
+        nbt.putInt("StatRplS", statReplateStars);
+        nbt.putInt("StatRplC", statReplateCount);
+        nbt.putInt("StatSlE", statSaleEmeralds);
+        nbt.putInt("StatSlD", statSaleDiamonds);
+        nbt.putInt("StatSlC", statSaleCount);
         return nbt;
     }
 
@@ -105,6 +121,9 @@ public class GaiConfig {
         config.stage3CostDiamonds = nbt.getInt("Stage3CostDiamonds", 5);
         config.particleCostEmeralds = nbt.getInt("ParticleCostEmeralds", 3);
         config.particleCostDiamonds = nbt.getInt("ParticleCostDiamonds", 1);
+        config.replateCostNetherStars = nbt.getInt("ReplateCostStars", 1);
+        config.disposalFeeEmeralds = nbt.getInt("DisposalFeeE", 5);
+        config.disposalFeeDiamonds = nbt.getInt("DisposalFeeD", 2);
         config.registrationPeriodMs = nbt.getLong("RegPeriodMs", 86400000L);
         config.gracePeriodMs = nbt.getLong("GracePeriodMs", 172800000L);
         if (nbt.getBoolean("IC1Set", false)) {
@@ -131,6 +150,11 @@ public class GaiConfig {
         config.statReleaseEmeralds = nbt.getInt("StatRelE", 0);
         config.statReleaseDiamonds = nbt.getInt("StatRelD", 0);
         config.statReleaseCount = nbt.getInt("StatRelC", 0);
+        config.statReplateStars = nbt.getInt("StatRplS", 0);
+        config.statReplateCount = nbt.getInt("StatRplC", 0);
+        config.statSaleEmeralds = nbt.getInt("StatSlE", 0);
+        config.statSaleDiamonds = nbt.getInt("StatSlD", 0);
+        config.statSaleCount = nbt.getInt("StatSlC", 0);
         return config;
     }
 
@@ -186,17 +210,19 @@ public class GaiConfig {
             case "stage" -> { statStageEmeralds += emeralds; statStageDiamonds += diamonds; statStageCount++; }
             case "particle" -> { statParticleEmeralds += emeralds; statParticleDiamonds += diamonds; statParticleCount++; }
             case "release" -> { statReleaseEmeralds += emeralds; statReleaseDiamonds += diamonds; statReleaseCount++; }
+            case "replate" -> { statReplateStars += emeralds; statReplateCount++; }
+            case "sale" -> { statSaleEmeralds += emeralds; statSaleDiamonds += diamonds; statSaleCount++; }
         }
     }
 
     public int getTotalEmeraldsSpent() {
-        return statRegEmeralds + statRenameEmeralds + statStageEmeralds + statParticleEmeralds + statReleaseEmeralds;
+        return statRegEmeralds + statRenameEmeralds + statStageEmeralds + statParticleEmeralds + statReleaseEmeralds + statSaleEmeralds;
     }
     public int getTotalDiamondsSpent() {
-        return statRegDiamonds + statRenameDiamonds + statStageDiamonds + statParticleDiamonds + statReleaseDiamonds;
+        return statRegDiamonds + statRenameDiamonds + statStageDiamonds + statParticleDiamonds + statReleaseDiamonds + statSaleDiamonds;
     }
     public int getTotalTransactions() {
-        return statRegCount + statRenameCount + statStageCount + statParticleCount + statReleaseCount;
+        return statRegCount + statRenameCount + statStageCount + statParticleCount + statReleaseCount + statReplateCount + statSaleCount;
     }
     public int getStatRegEmeralds() { return statRegEmeralds; }
     public int getStatRegDiamonds() { return statRegDiamonds; }
@@ -213,6 +239,18 @@ public class GaiConfig {
     public int getStatReleaseEmeralds() { return statReleaseEmeralds; }
     public int getStatReleaseDiamonds() { return statReleaseDiamonds; }
     public int getStatReleaseCount() { return statReleaseCount; }
+
+    public int getReplateCostNetherStars() { return replateCostNetherStars; }
+    public void setReplateCostNetherStars(int cost) { this.replateCostNetherStars = Math.max(1, cost); }
+    public int getDisposalFeeEmeralds() { return disposalFeeEmeralds; }
+    public void setDisposalFeeEmeralds(int cost) { this.disposalFeeEmeralds = cost; }
+    public int getDisposalFeeDiamonds() { return disposalFeeDiamonds; }
+    public void setDisposalFeeDiamonds(int cost) { this.disposalFeeDiamonds = cost; }
+    public int getStatReplateStars() { return statReplateStars; }
+    public int getStatReplateCount() { return statReplateCount; }
+    public int getStatSaleEmeralds() { return statSaleEmeralds; }
+    public int getStatSaleDiamonds() { return statSaleDiamonds; }
+    public int getStatSaleCount() { return statSaleCount; }
 
     public long getDeadlinePeriodForNewGhast() {
         if (graceActive) {

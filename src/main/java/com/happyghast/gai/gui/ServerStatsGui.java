@@ -13,7 +13,7 @@ public class ServerStatsGui {
 
     public static void open(ServerPlayerEntity admin, GhastRegistryState state) {
         GaiConfig config = state.getConfig();
-        SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X4, admin, false);
+        SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X5, admin, false);
         gui.setTitle(Text.literal("\u00a76\u0413\u0410\u0418 | \u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0430"));
 
         int totalE = config.getTotalEmeraldsSpent();
@@ -25,6 +25,7 @@ public class ServerStatsGui {
                 .addLoreLine(Text.literal(""))
                 .addLoreLine(Text.literal("\u00a7a\u0418\u0437\u0443\u043C\u0440\u0443\u0434\u043E\u0432 \u043F\u043E\u0442\u0440\u0430\u0447\u0435\u043D\u043E: \u00a7f" + totalE))
                 .addLoreLine(Text.literal("\u00a7b\u0410\u043B\u043C\u0430\u0437\u043E\u0432 \u043F\u043E\u0442\u0440\u0430\u0447\u0435\u043D\u043E: \u00a7f" + totalD))
+                .addLoreLine(Text.literal("\u00a7d\u0417\u0432\u0451\u0437\u0434 \u041D\u0435\u0437\u0435\u0440\u0430: \u00a7f" + config.getStatReplateStars()))
                 .addLoreLine(Text.literal(""))
                 .addLoreLine(Text.literal("\u00a77\u0412\u0441\u0435\u0433\u043E \u0442\u0440\u0430\u043D\u0437\u0430\u043A\u0446\u0438\u0439: \u00a7f" + totalTx))
                 .glow()
@@ -46,9 +47,24 @@ public class ServerStatsGui {
                 Items.BLAZE_POWDER, "\u00a7c\u0427\u0430\u0441\u0442\u0438\u0446\u044B",
                 config.getStatParticleEmeralds(), config.getStatParticleDiamonds(), config.getStatParticleCount()));
 
-        gui.setSlot(22, buildCategoryItem(
+        gui.setSlot(19, buildCategoryItem(
                 Items.IRON_BARS, "\u00a76\u0412\u044B\u043A\u0443\u043F \u0441\u043E \u0448\u0442\u0440\u0430\u0444\u0441\u0442\u043E\u044F\u043D\u043A\u0438",
                 config.getStatReleaseEmeralds(), config.getStatReleaseDiamonds(), config.getStatReleaseCount()));
+
+        gui.setSlot(21, new GuiElementBuilder(Items.NETHER_STAR)
+                .setName(Text.literal("\u00a7d\u0421\u043C\u0435\u043D\u0430 \u043D\u043E\u043C\u0435\u0440\u043E\u0432"))
+                .addLoreLine(Text.literal(""))
+                .addLoreLine(Text.literal("\u00a7d\u0417\u0432\u0451\u0437\u0434 \u041D\u0435\u0437\u0435\u0440\u0430: \u00a7f" + config.getStatReplateStars()))
+                .addLoreLine(Text.literal("\u00a77\u0422\u0440\u0430\u043D\u0437\u0430\u043A\u0446\u0438\u0439: \u00a7f" + config.getStatReplateCount()))
+                .build());
+
+        gui.setSlot(23, new GuiElementBuilder(Items.EMERALD_BLOCK)
+                .setName(Text.literal("\u00a7a\u041F\u0440\u043E\u0434\u0430\u0436\u0438 \u0433\u0430\u0441\u0442\u043E\u0432"))
+                .addLoreLine(Text.literal(""))
+                .addLoreLine(Text.literal("\u00a7a\u0423\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440 \u0438\u0437\u0443\u043C.: \u00a7f" + config.getStatSaleEmeralds()))
+                .addLoreLine(Text.literal("\u00a7b\u0423\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440 \u0430\u043B\u043C.: \u00a7f" + config.getStatSaleDiamonds()))
+                .addLoreLine(Text.literal("\u00a77\u0421\u0434\u0435\u043B\u043E\u043A: \u00a7f" + config.getStatSaleCount()))
+                .build());
 
         int regGhasts = state.getRegisteredGhasts().size();
         int impounded = state.getImpoundedGhasts().size();

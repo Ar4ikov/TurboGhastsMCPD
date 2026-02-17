@@ -199,6 +199,46 @@ public class AdminConfigGui {
                 })
                 .build());
 
+        gui.setSlot(49, new GuiElementBuilder(Items.NETHER_STAR)
+                .setName(Text.literal("\u00a7d\u0421\u043C\u0435\u043D\u0430 \u043D\u043E\u043C\u0435\u0440\u0430: \u0437\u0432\u0451\u0437\u0434\u044B = " + config.getReplateCostNetherStars()))
+                .addLoreLine(Text.literal("\u00a77\u041C\u0438\u043D\u0438\u043C\u0443\u043C: 1"))
+                .setCallback((index, type, action) -> {
+                    gui.close();
+                    openNumberInput(player, state, "\u0417\u0432\u0451\u0437\u0434\u044B \u0437\u0430 \u0440\u0435\u043F\u043B\u0435\u0439\u0442 (\u043C\u0438\u043D. 1)",
+                            String.valueOf(config.getReplateCostNetherStars()), value -> {
+                                config.setReplateCostNetherStars(value);
+                                state.saveConfig();
+                                open(player, state);
+                            });
+                })
+                .build());
+
+        gui.setSlot(51, new GuiElementBuilder(Items.ANVIL)
+                .setName(Text.literal("\u00a76\u0423\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440: \u0438\u0437\u0443\u043C\u0440\u0443\u0434\u044B = " + config.getDisposalFeeEmeralds()))
+                .setCallback((index, type, action) -> {
+                    gui.close();
+                    openNumberInput(player, state, "\u0418\u0437\u0443\u043C\u0440. \u0443\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440",
+                            String.valueOf(config.getDisposalFeeEmeralds()), value -> {
+                                config.setDisposalFeeEmeralds(value);
+                                state.saveConfig();
+                                open(player, state);
+                            });
+                })
+                .build());
+
+        gui.setSlot(52, new GuiElementBuilder(Items.ANVIL)
+                .setName(Text.literal("\u00a76\u0423\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440: \u0430\u043B\u043C\u0430\u0437\u044B = " + config.getDisposalFeeDiamonds()))
+                .setCallback((index, type, action) -> {
+                    gui.close();
+                    openNumberInput(player, state, "\u0410\u043B\u043C\u0430\u0437\u044B \u0443\u0442\u0438\u043B\u044C\u0441\u0431\u043E\u0440",
+                            String.valueOf(config.getDisposalFeeDiamonds()), value -> {
+                                config.setDisposalFeeDiamonds(value);
+                                state.saveConfig();
+                                open(player, state);
+                            });
+                })
+                .build());
+
         gui.open();
     }
 

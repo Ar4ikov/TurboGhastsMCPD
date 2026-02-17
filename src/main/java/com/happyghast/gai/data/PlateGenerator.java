@@ -62,6 +62,44 @@ public class PlateGenerator {
         return new ArrayList<>(generated);
     }
 
+    /**
+     * Validates that a plate string matches the format: Б000ББ 52
+     * where Б is one of 12 allowed Cyrillic letters and 0 is a digit.
+     */
+    public static boolean isValidFormat(String plate) {
+        if (plate == null) return false;
+        String trimmed = plate.trim();
+        if (!trimmed.endsWith(" " + REGION)) return false;
+        String body = trimmed.substring(0, trimmed.length() - REGION.length() - 1);
+        if (body.length() != 6) return false;
+        if (!isPlateLetter(body.charAt(0))) return false;
+        for (int i = 1; i <= 3; i++) {
+            if (!Character.isDigit(body.charAt(i))) return false;
+        }
+        if (!isPlateLetter(body.charAt(4))) return false;
+        if (!isPlateLetter(body.charAt(5))) return false;
+        return true;
+    }
+
+    private static boolean isPlateLetter(char c) {
+        for (char pl : PLATE_LETTERS) {
+            if (pl == c) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Normalizes a user-typed plate: appends region if missing.
+     */
+    public static String normalize(String input) {
+        if (input == null) return "";
+        String trimmed = input.trim();
+        if (!trimmed.endsWith(" " + REGION)) {
+            trimmed = trimmed + " " + REGION;
+        }
+        return trimmed;
+    }
+
     private static String generate() {
         char l1 = PLATE_LETTERS[RANDOM.nextInt(PLATE_LETTERS.length)];
         int digits = RANDOM.nextInt(1000);
